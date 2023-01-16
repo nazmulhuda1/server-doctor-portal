@@ -3,7 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 
 // middleware
@@ -39,6 +39,7 @@ async function run() {
         const appointmentOptionCollection = client.db('doctorsPortal').collection('appointmentOpptions');
         const bookingsCollection = client.db('doctorsPortal').collection('bookings');
         const usersCollection = client.db('doctorsPortal').collection('users');
+        const doctorsCollection = client.db('doctorsPortal').collection('doctors');
 
 
         // appointmentOpptions Find
@@ -195,6 +196,34 @@ async function run() {
             }
             const result = await usersCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
+        })
+
+        // ==========
+        app.get('/appointmentSpecialty', async (req, res) => {
+            const query = {}
+            const result = await appointmentOptionCollection.find(query).project({ name: 1 }).toArray()
+            res.send(result);
+        })
+
+        // ===== doctors insert ==== 
+        app.post('/doctors', async (req, res) => {
+            const doctor = req.body;
+            const result = await doctorsCollection.insertOne(doctor);
+            res.send(result)
+        });
+        // ===== doctors find & show display =====
+        app.get('/doctors', async (req, res) => {
+            const query = {};
+            const doctors = await doctorsCollection.find(query).toArray()
+            res.send(doctors)
+        });
+
+        // delete doctor
+        app.delete('/doctors/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await doctorsCollection.deleteOne(filter);
+            res.send(result)
         })
 
     }
